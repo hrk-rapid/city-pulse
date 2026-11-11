@@ -1,0 +1,9 @@
+# APIから取得したデータ
+stations.json
+
+# 秘密情報
+.env
+.env.*
+
+# Node.js
+node_modules/

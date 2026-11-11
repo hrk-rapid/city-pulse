@@ -6,14 +6,17 @@ function resize(){
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 }
+//'resize'が起きたときに、関数resizeを実行する
 window.addEventListener('resize', resize);
+//ブラウザのサイズが変更されなくても、canvasのサイズを合わせる必要がある
 resize();
 
 //駅の定義　C4はドの音です
 const stations = [
-    {name: "Station A", x: window.innerWidth * 0.2, y: window.innerHeight * 0.5, note: "C4"},
-    {name: "Station B", x: window.innerWidth * 0.5, y: window.innerHeight * 0.5, note: "E4"},
-    {name: "Station C", x: window.innerWidth * 0.8, y: window.innerHeight * 0.5, note: "G4"},
+    {name: "Station A", x: window.innerWidth * 0.2, y: window.innerHeight * 0.5, sound: "C4"},
+    {name: "Station B", x: window.innerWidth * 0.5, y: window.innerHeight * 0.4, sound: "A4"},
+    {name: "Station C", x: window.innerWidth * 0.8, y: window.innerHeight * 0.5, sound: "G4"},
+    {name: "Station D", x: window.innerWidth * 1.1, y: window.innerHeight * 0.5, sound: "C5"},
 ];
 
 //列車データ
@@ -21,7 +24,8 @@ const train = {
     x: stations[0].x,
     y: stations[0].y,
     targetIndex: 1,
-    speed: 0.05
+    speed: 0.1,
+    direction: 1
 };
 
 //音データ　Tone.jsを使ったシンセサイザー音
@@ -72,7 +76,8 @@ function animate(){
     const dy = target.y - train.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
     
-    //駅に近づくとゆっくりになるように
+    //駅に近づいたときの処理
+    //近づくとゆっくりになる
     if(distance > 2){
         train.x += dx * train.speed;
         train.y += dy * train.speed;
@@ -80,12 +85,18 @@ function animate(){
     else{
         //到着処理、音を鳴らそう
         if(audioReady){
-            synth.triggerAttackRelease(target.note, "8n");
+            synth.triggerAttackRelease(target.sound, "8n");
         }
         train.x = target.x;
         train.y = target.y;
 
-        train.targetIndex = (train.targetIndex + 1) % stations.length;
+        if(train.targetIndex === stations.length - 1){
+            train.direction = -1;
+        }
+        else if(train.targetIndex === 0){
+            train.direction = 1;
+        }
+        train.targetIndex += train.direction;
     }
 
     ctx.fillStyle = '#f43f5e';

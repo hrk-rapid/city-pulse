@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <title>TX Station Test</title>
+        <style>
+            body{
+                margin: 0;
+                background: #050505;
+            }
+            canvas{
+                display: block;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="mainCanvas"></canvas>
+
+        <script>
+            const canvas = document.getElementById("mainCanvas");
+            const ctx = canvas.getContext("2d");
+
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const drawStations = async() =>{
+                const response = await fetch("./stations.json");
+                const data = await response.json();
+
+                const stations = data.filter(station =>
+                    typeof station["geo:lat"] === "number" &&
+                    typeof station["geo:long"] === "number"
+                )
+                .sort((a, b) => a["geo:long"] - b["geo:long"]);
+
+                const latitudes = stations.map(station => station["geo:lat"]);
+                const longitudes = stations.map(station => station["geo:long"]);
+
+                const minLatitude = Math.min(...latitudes);
+                const maxLatitude = Math.max(...latitudes);
+                const minLongitude = Math.min(...longitudes);
+                const maxLongitude = Math.max(...longitudes);
+
+                ctx.strokeStyle = "#38bdf8";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                stations.forEach((station, index) => {
+                    const latitude = station["geo:lat"];
+                    const longitude = station["geo:long"];
+
+                    const x = 40 + (longitude - minLongitude) / (maxLongitude - minLongitude) * (canvas.width - 80);
+
+                    const y = 40 + (maxLatitude - latitude) / (maxLatitude - minLatitude) * (canvas.height - 80);
+
+                    if(index === 0){
+                        ctx.moveTo(x, y);
+                    }
+                    else{
+                        ctx.lineTo(x, y);
+                    }
+                });
+
+                ctx.stroke();
+
+                stations.forEach(station => {
+                    const latitude = station["geo:lat"];
+                    const longitude = station["geo:long"];
+
+                    const x = 40 + (longitude - minLongitude) / (maxLongitude - minLongitude) * (canvas.width - 80);
+
+                    const y = 40 + (maxLatitude - latitude) / (maxLatitude - minLatitude) * (canvas.height - 80);
+
+                    ctx.fillStyle = "#38bdf8";
+                    ctx.beginPath();
+                    ctx.arc(x, y, 5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = "white";
+                    ctx.font = "12px sans-serif";
+                    ctx.fillText(station["dc:title"], x+6, y+8);
+                });
+            };
+
+            drawStations();
+
+        </script>
+    </body>
+</html>
